@@ -1,0 +1,7 @@
+*.swp
+attic/*
+log/*.log
+*.*~
+tmp/*
+*.pid
+*.ttc
