@@ -1,2 +1,22 @@
-# kc-backend
-README
+=pod
+
+=head1 Keystone::Connect
+
+The Keystone Connect backend and assorted modules, plugins, etc.
+
+=head2 Repository Layout
+
+The Mojolicious backend application lives under Keystone::Connect - any modules in that namespace (e.g. Keystone::Connect::Controller) are either Mojolicious controllers, or modules used in the direct operation of the backend application.
+
+Any modules found under Keystone::Plugin or the main Keystone namespace (e.g. Keystone::Util) are generic modules that can be used with any application.
+
+=head2 External dependencies
+
+=over 4
+
+=item * Mojolicious
+=item * Mojo::Pg
+
+=back
+
+=cut
