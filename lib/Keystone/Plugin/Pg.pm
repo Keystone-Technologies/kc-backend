@@ -19,7 +19,7 @@ sub register {
         });
 
         my $path = $app->home->rel_file($conf->{migration_file});
-        my $migration = $app->pg->migrations->name(decamelize(ref($self)))->from_file($path);
+        my $migration = $app->pg->migrations->name(decamelize(ref($app)))->from_file($path);
 
         if($migration->active < $migration->latest) {
             $app->log->info(ref($self) . ': Migrating to latest version');
