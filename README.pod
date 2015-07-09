@@ -15,6 +15,7 @@ Any modules found under Keystone::Plugin or the main Keystone namespace (e.g. Ke
 =over 4
 
 =item * Mojolicious
+
 =item * Mojo::Pg
 
 =back
