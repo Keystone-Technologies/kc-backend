@@ -4,6 +4,7 @@ use Mojo::Base 'Mojolicious';
 
 sub startup {
     my $self = shift;
+    $self->routes->get('/' => sub { shift->render(text => scalar localtime) });
 }
 
 1;
