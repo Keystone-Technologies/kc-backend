@@ -18,7 +18,8 @@ sub register {
             return shift->pg->db;
         });
 
-        my $path = $app->home->rel_file($conf->{migration_file});
+        my $path = $app->home->rel_file($conf->{migration});
+        $app->log->debug('Getting migration ' . decamelize(ref($app)) . ' from ' . $path);
         my $migration = $app->pg->migrations->name(decamelize(ref($app)))->from_file($path);
 
         if($migration->active < $migration->latest) {
