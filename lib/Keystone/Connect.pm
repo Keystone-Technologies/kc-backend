@@ -16,6 +16,7 @@ sub startup {
     my $root = $self->routes;
     my $auth = $root->under('/auth');
         $auth->route('/facebook')->to('auth#facebook')->name('auth_facebook');
+        $auth->route('/facebook_return')->to('auth#facebook_return')->name('auth_facebook_return');
 }
 
 1;
