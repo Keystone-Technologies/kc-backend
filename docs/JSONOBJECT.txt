@@ -1,0 +1,7 @@
+Simply call: 
+
+    KCB.updateUserGrid({ ... json ... }, function() {
+        // onComplete
+    });
+
+

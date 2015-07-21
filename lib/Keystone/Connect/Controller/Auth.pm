@@ -1,5 +1,5 @@
 package Keystone::Connect::Controller::Auth;
-use Mojo::Base 'Keystone::Connect::Controller';
+use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Util qw/url_escape/;
 
 sub generate_nonce {
@@ -43,8 +43,8 @@ sub facebook {
         my ($c, $err) = (@_);
 
         if(defined($err)) {
+            # return to the tenant url
             $c->stash(is_error => 1, error => $err);
-            $c->render(template => 'auth/close');
         } else {
             $c->session(auth => { return => $self->req->param('auth_return'), tenant => $self->stash('tenant')->{id}  });
             $c->render_later;

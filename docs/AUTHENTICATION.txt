@@ -1,0 +1,35 @@
+Setup
+-----
+
+    First, make sure to load "kcb.js" from the backend - this will supply a global object 
+    called (very originally) "KCB". 
+
+Authenticating
+--------------
+
+    In order to authenticate, you'll have to show a modal (or another UI bit) that has 
+    buttons for the provided authentication mechanisms. Currently, only facebook. On button
+    click, you can then:
+
+    function clickFacebook() {
+        KCB.authenticat('facebook');
+    }
+
+    The second parameter is a relative URL to return the user to once signin is complete.
+
+    These methods will cause a redirect to take place to the backend, which will then redirect
+    to the proper site for user authentication. 
+
+    Once authentication is complete, the process redirects back to the tenant domain and
+    passes a 'status' parameter along with it. If status is set to 'ok' authentication was
+    successful, if set to 'error' authentication failed. 
+
+    When authentication failed, you can examine the KCB.lastAuthenticationError property 
+    to get the error code. 
+
+
+Checking if a user is authenticated and getting user object
+-----------------------------------------------------------
+
+    KCB.isAuthenticated()   - returns true when the user is authenticated, false if not
+    KCB.getUser()           - returns the user object 
