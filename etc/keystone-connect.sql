@@ -34,3 +34,7 @@ DROP TABLE auth_nonce;
 
 --2 up
 ALTER TABLE auth_nonce ADD used INTEGER NOT NULL DEFAULT 0;
+
+--3 up
+INSERT INTO tenant (ident, name) VALUES ('benlocal', 'Ben Local Test');
+INSERT INTO tenant_map (tenant, hostname) VALUES (1, 'localhost');

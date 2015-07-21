@@ -1,5 +1,5 @@
 package Keystone::Connect::Controller::Auth;
-use Mojo::Base 'Mojolicious::Controller';
+use Mojo::Base 'Keystone::Connect::Controller';
 use Mojo::Util qw/url_escape/;
 
 sub generate_nonce {
@@ -37,24 +37,33 @@ sub generate_nonce {
 sub facebook { 
     my $self = shift;
 
-    $self->session(auth_return => $self->req->param('auth_return'));
-
     $self->render_later;
-    $self->generate_nonce(sub {
-        my $c = shift;
-        my $nonce = shift;
 
-        my $return_url = sprintf('%s/auth/facebook_return', $c->req->url->base);
+    $self->validate_tenant(sub {
+        my ($c, $err) = (@_);
 
-        $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
+        if(defined($err)) {
+            $c->stash(is_error => 1, error => $err);
+            $c->render(template => 'auth/close');
+        } else {
+            $c->session(auth => { return => $self->req->param('auth_return'), tenant => $self->stash('tenant')->{id}  });
+            $c->render_later;
+            $c->generate_nonce(sub {
+                my ($c, $nonce) = (@_);
 
-        $c->redirect_to(
-            sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=token&scope=email',
-                $c->config('login')->{facebook}->{client_id},
-                $return_url,
-                $nonce,
-            )
-        );
+                my $return_url = sprintf('%s/auth/facebook_return', $c->req->url->base);
+
+                $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
+
+                $c->redirect_to(
+                    sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=token&scope=email',
+                        $c->config('login')->{facebook}->{client_id},
+                        $return_url,
+                        $nonce,
+                    )
+                );
+            });
+        }
     });
 }
 
