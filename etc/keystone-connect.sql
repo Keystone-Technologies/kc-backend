@@ -31,3 +31,6 @@ DROP TABLE account;
 DROP TABLE tenant_map;
 DROP TABLE tenant;
 DROP TABLE auth_nonce;
+
+--2 up
+ALTER TABLE auth_nonce ADD used INTEGER NOT NULL DEFAULT 0;

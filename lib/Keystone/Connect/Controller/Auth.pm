@@ -22,7 +22,7 @@ sub generate_nonce {
         my ($db, $err, $results) = (@_);
 
         if($results->rows == 0) {
-            $self->db->query('INSERT INTO auth_nonce (nonce) VALUES (?)', $nonce => sub {
+            $self->db->query('INSERT INTO auth_nonce (nonce, used) VALUES (?, 0)', $nonce => sub {
                 return $cb->($self, $nonce);
             });
         } else {
@@ -36,6 +36,8 @@ sub generate_nonce {
 
 sub facebook { 
     my $self = shift;
+
+    $self->session(auth_return => $self->req->param('auth_return'));
 
     $self->render_later;
     $self->generate_nonce(sub {
@@ -62,29 +64,46 @@ sub facebook_return {
     $self->render_later;
 
     if(defined($self->req->param('error'))) {
-        # we could log this, but at the moment we'll just throw out the javascript to close the popup 
-        # window and reload the opener
-        $self->render(template => 'auth/close', format => 'js');
-    } elsif(my $token = $self->req->param('token')) {
-        $self->ua->get('https://graph.facebook.com/debug_token' => form => {
-            input_token     => $token,
-            access_token    => $self->config('login')->{facebook}->{client_id},
-        } => sub {
-            my ($ua, $tx) = (@_);
+        $self->stash(is_error => 1, error => $self->req->param('error'));
+        $self->render(template => 'auth/close');
+    } elsif(my $nonce = $self->req->param('#state')) {
+        # see if the nonce has been used yet
+        $self->db->query('SELECT id FROM auth_nonce WHERE nonce = ?', $nonce => sub {
+            my ($db, $err, $results) = (@_);
 
-            if(my $res = $tx->success) {
-                if($res->json->{data}->{app_id} eq $self->config('login')->{facebook}->{client_id}) {
-                    # fetch email address using the graph API, then exchange it for an ID from the database
-                    # if we have one, and create something if we don't have it
+            if(my $nonce = $results->hash) {
+                if($nonce->{used} > 0) {
+                    $self->stash(is_error => 1, error => 'NONCE_ALREADY_USED');
+                    $self->render(template => 'auth/close');
+                } elsif(my $token = $self->req->param('access_token')) {
+                    $self->ua->get('https://graph.facebook.com/debug_token' => form => {
+                        input_token     => $token,
+                        access_token    => $self->config('login')->{facebook}->{client_id},
+                    } => sub {
+                        my ($ua, $tx) = (@_);
+
+                        if(my $res = $tx->success) {
+                            if($res->json->{data}->{app_id} eq $self->config('login')->{facebook}->{client_id}) {
+                                # fetch email address using the graph API, then exchange it for an ID from the database
+                                # if we have one, and create something if we don't have it
+                            } else {
+                                $self->stash(is_error => 1, error => 'FB_INVALID_APP_ID');
+                                $self->render(template => 'auth/close');
+                            }
+                        }
+                    });
                 } else {
-                    # FIXME: persistent server side session perhaps? 
+                    $self->stash(is_error => 1, error => 'FB_NO_TOKEN_RETURNED');
+                    $self->render(template => 'auth/close');
                 }
+            } else {
+                $self->stash(is_error => 1, error => 'NONCE_INVALID');
+                $self->render(template => 'auth/close');
             }
         });
     } else {
-        # no code, no error, generally classified as: wtf? 
-        # close the auth window and reload the caller
-        $self->render(template => 'auth/close', format => 'js');
+        $self->stash(is_error => 1, error => 'NONCE_EMPTY');
+        $self->render(template => 'auth/close');
     }
 }
 
