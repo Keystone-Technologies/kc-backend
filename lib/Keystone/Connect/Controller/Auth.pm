@@ -62,7 +62,7 @@ sub facebook {
                     $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
 
                     $c->redirect_to(
-                        sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=token&scope=email',
+                        sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=email',
                             $c->config('login')->{facebook}->{client_id},
                             $return_url,
                             $nonce,
