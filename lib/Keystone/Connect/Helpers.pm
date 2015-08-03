@@ -36,6 +36,7 @@ sub install {
         my $self = shift;
         return (defined($self->user)) ? encode_json($self->user) : 'null';
     });
+    $app->helper(get_backend_url => sub { return shift->req->url->base });
     $app->helper(user => sub { return shift->stash('current_user') });
     $app->helper(url_on_tentant => sub {
     });
