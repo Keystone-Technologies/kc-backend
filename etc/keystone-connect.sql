@@ -51,3 +51,19 @@ ALTER TABLE account ADD expires_at INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE account ADD access_token VARCHAR(255) NOT NULL DEFAULT '*';
 
 --5 down
+
+--6 up
+ALTER TABLE account DROP COLUMN expires_at;
+ALTER TABLE account DROP COLUMN access_token;
+
+CREATE TABLE backend_token (
+    token           VARCHAR(64) NOT NULL PRIMARY KEY,
+    account         INTEGER NOT NULL REFERENCES account (id) DEFERRABLE INITIALLY DEFERRED,
+    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 year'
+);
+
+INSERT INTO tenant (ident, name) VALUES ('kcdevkit', 'Dev Kit Environment');
+INSERT INTO tenant_map (tenant, hostname) VALUES (2, 'kc-backend.dev.kit.cm');
+
+--6 down
+DROP TABLE backend_token CASCADE;

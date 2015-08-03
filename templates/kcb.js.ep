@@ -2,11 +2,13 @@ window.KCB = function(options) {
     this.basedomain = options.basedomain;
     this._data      = { 
         user: <%== get_user_for_js %>,
-        handlers: {},
         backend: '<%== get_backend_url %>',
+        handlers: {},
+        apiVersion: '1.0',
     }
 
     var that = this;
+
     $(document).ready(function() {
         that.emit('ready');
     });
@@ -14,7 +16,7 @@ window.KCB = function(options) {
 
 KCB.prototype = {
     on: function(evt, handler) {
-        if(!this._data.handlers[evt]) this._handlers[evt] = [];
+        if(!this._data.handlers[evt]) this._data.handlers[evt] = [];
         this._data.handlers[evt].push(handler);
     },
     emit: function(evt, data) {
@@ -27,6 +29,9 @@ KCB.prototype = {
             });
         }
     },
+    getUser: function() {
+        return this._data.user;
+    },
     isAuthenticated: function() {
         if(this._data.user) return true;
         return false;
@@ -34,9 +39,14 @@ KCB.prototype = {
     getBackendURL: function() {
         return this._data.backend;
     },
-    authenticate: function(type, returnTo) {
-        var ret = document.location.protocol + '//' + document.location.host + ((document.location.port.length > 0) ? ':' + document.location.port : '') + returnTo;
-        alert('Going to go to: ' + this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(ret) + '&t=' + document.location.hostname);
+    signin: function(type, returnTo) {
+        if(!returnTo) returnTo = '/';
+        var ret = document.location.protocol + '//' + document.location.host + returnTo;
         document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(ret) + '&t=' + document.location.hostname;
     },
+    signout: function(returnTo) {
+        if(!returnTo) returnTo = '/';
+        var ret = document.location.protocol + '//' + document.location.host + returnTo;
+        document.location.href = this.getBackendURL() + '/auth/signout?r=' + encodeURIComponent(ret);
+    }
 };

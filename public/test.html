@@ -6,7 +6,8 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-        <script src="//kc-backend.dev.kit.cm/kcb.js"></script>
+        <!-- <script src="//kc-backend.dev.kit.cm/kcb.js"></script> -->
+        <script src="/kcb.js"></script>
         <script type="text/javascript">
             var Backend = new KCB({ basedomain: 'localhost' });
         </script>
@@ -19,20 +20,29 @@
             </div>
             <div class="auth alert alert-success">
                 <p class="lead">You are authenticated</p>
+                <p>Email: <span class="email"></span>, Name: <span class="name"></span></p>
+                <button class="btn btn-lg" id="signout">SIGN OUT</button>
             </div>
         </div>
         <script type="text/javascript">
-            $(document).ready(function() {
-                if(Backend.isAuthenticated()) {
+            Backend.on('ready', function() {
+                if(this.isAuthenticated()) {
                     $('.unauth').hide();
                     $('.auth').show();
+                    
+                    $('span.email').html(this.getUser().email);
+                    $('span.name').html(this.getUser().name);
                 } else {
                     $('.unauth').show();
                     $('.auth').hide();
                 }
-
                 $('button#signin').click(function() {
-                    Backend.authenticate('facebook', '/');
+                    Backend.signin('facebook', '/test.html');
+                    return false;
+                });
+                $('button#signout').click(function() {
+                    Backend.signout('/test.html');
+                    return false;
                 });
             });
         </script>
