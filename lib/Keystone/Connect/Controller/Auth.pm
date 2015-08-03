@@ -51,10 +51,13 @@ sub facebook {
                 $self->redirect_to(sprintf('%s?status=error&error=KC_INVALID_TENANT', $root));
             } else {
                 $self->session(auth => { root => $root, tenant => $res->hash->{id} });
+
+                # make sure that actually does what it's supposed to do
+
                 $self->generate_nonce(sub {
                     my ($c, $nonce) = (@_);
 
-                    my $return_url = sprintf('%s/auth/facebook_return', $c->req->url->base);
+                    my $return_url = sprintf('%s/auth/facebook_return/', $c->req->url->base);
 
                     $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
 
