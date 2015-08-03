@@ -110,7 +110,7 @@ sub facebook_return {
                                     } else {
                                         $self->redirect_root(status => 'error', error => 'FB_COULD_NOT_GET_EMAIL');
                                     }
-                                }
+                                });
                             } else {
                                 $self->redirect_root(status => 'error', 'error' => 'FB_INVALID_APP');
                             }
