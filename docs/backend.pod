@@ -1,0 +1,132 @@
+=pod
+
+=head1 GETTING STARTED
+
+In order to develop agains the backend, add the following to your HTML pages:
+
+    <script src="//backend-server-url/kcb.js"></script>
+
+This will get you the KCB object. 
+
+=head2 SETTING UP
+
+Instantiate a new KCB object:
+
+    var Backend = new KCB({ basedomain: document.location.hostname });
+
+=head2 EVENTS
+
+The backend object triggers a 'ready' event when the DOM is ready. Use this instead of $(document).ready() unless absolutely necessary. You can add handlers as follows:
+
+    Backend.on('ready', function() {
+        var backend_instance = this;
+
+        if(this.getUser().email == 'foo@bar.com') {
+            alert('Oh no!');
+        }
+    });
+
+You can also use the backend object to dispatch your own events:
+
+    Backend.on('foo', function() {
+        alert('bar');
+    });
+
+    Backend.emit('foo');
+
+=head1 AUTHENTICATION AND USERS
+
+You can see if a user is authenticated as follows:
+
+    if(Backend.isAuthenticated()) {
+        // user is authenticated
+    } else {
+        // user is not authenticated
+    }
+
+=head2 SIGNING IN
+
+To sign a user in, use the following:
+
+    Backend.signin(signinType, relativeReturnURL);
+
+Currently the only signinType supported is 'facebook'. 
+
+The relativeReturnURL must be relative to the website/app in question, e.g. if you want to return to 'http://yoursite.com/foo.html', this would be '/foo.html'
+
+=head3 SIGNIN RESULTS
+
+When signin is completed, a status and either an error message or access token is returned as parameters to your relative redirect url. 
+
+When the 'status' parameter is set to 'ok', you can assume the user is signed in and that C<Backend.getUser()> and C<Backend.isAuthenticated()> will work. 
+When the 'status' parameter is set to 'error', you can find the error code in the 'error' parameter. 
+
+Possible error codes are:
+
+=over 4
+
+=item * KC_NO_TENANT_SUPPLIED - The tenant ID was missing in the signin call
+
+=item * KC_INVALID_TENANT - The tenant either does not exist, or has been blocked
+
+=item * KC_REQ_ERROR - Occurs when a request to Facebook or another external site errored out
+
+=item * NO_ACCESS_TOKEN - (Facebook only) Occurs when we couldn't obtain an access token from Facebook
+
+=item * KC_NONCE_DB_ERROR - We couldn't look up a nonce due to a database error
+
+=item * KC_NONCE_DUPLICATE - This nonce has been used already (Should be a fatal type error)
+
+=item * KC_NONCE_NOT_FOUND - This nonce wasn't in the database (Should be a fatal type error)
+
+=item * FB_COULD_NOT_GET_PROFILE - (Facebook only) Could not get the users' profile from the Graph API
+
+=item * KC_DATABASE_ERROR - Unspecified database lookup error
+
+=item * KC_ACCOUNT_CREATE_ERROR - Error occurred during account creation
+
+=item * KC_TOKEN_CREATE_ERROR - Error occurred during token creation
+
+=item * FB_AUTH_DENIED_OR_CANCELLED - User cancelled the Facebook authentication or signed in wrong
+
+=item * FB_AUTH_ERROR - An error occurred during Facebook authentication
+
+=item * KC_NONCE_EMPTY - No nonce was passed in the Facebook return request
+
+=item * FB_NO_CODE - Facebook did not supply an authentication code
+
+=back
+
+=head1 REQUESTS TO THE BACKEND
+
+Currently the backend API version is '1.0', the root URL being C<http(s)://backend-app/v1.0/{endpoint}>. 
+
+All backend requests return a JSON object in the following format:
+
+    {
+        "status":   "ok|error",
+        "error":    "error_code_or_message",
+        "data":     { ... }
+    }
+
+When status is set to 'error', you can find the actual error message or code in the 'error' field. When status is 'ok', the 'data' field contains the requested data.
+
+=head2 FETCHING USER OBJECT
+
+C<GET http(s)://backend-app/v1.0/me/grid>
+
+Parameters:             none
+Request Content-Type:   application/json
+
+Returns the users' JSON object 
+
+=head2 UPDATING/CREATING USER OBJECT
+
+C<POST http(s)://backend-app/v1.0/me/grid>
+
+Parameters:             user_object - The users' JSON object
+Request Content-Type:   application/json
+
+Returns the users' JSON object when stored successfully.
+
+=cut

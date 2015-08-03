@@ -24,10 +24,10 @@ sub startup {
     my $root = $self->routes->under('/')->to('auth#validate_kc_token')->name('validate_kc_token_bridge');
         $root->route('/kcb')->to('main#kcb_js')->name('kcb_js');
 
-    my $api = $root->under('/api');
-        my $v1 = $api->under('/v1.0');
-            $v1->route('/me')->to('api-v1#me')->name('api_v1_me');
-
+    my $v1 = $root->under('/v1.0')->name('api_v1');
+        my $v1_me = $v1->under('/me')->name('api_v1_me');
+            $v1_me->route->via(qw/GET/)->to('api-v1#me_get_grid')->name('api_v1_me_get_grid');
+            $v1_me->route->via(qw/POST/)->to('api-v1#me_set_grid')->name('api_v1_me_set_grid');
 }
 
 1;
