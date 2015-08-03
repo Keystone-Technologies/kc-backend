@@ -31,6 +31,9 @@ KCB.prototype = {
         if(this._data.user) return true;
         return false;
     },
+    getBackendURL: function() {
+        retrn this._data.backend;
+    },
     authenticate: function(type, returnTo) {
         document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(returnTo);
     },
