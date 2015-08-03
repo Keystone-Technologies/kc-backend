@@ -12,7 +12,7 @@ Authenticating
     click, you can then:
 
     function clickFacebook() {
-        KCB.authenticat('facebook');
+        KCB.authenticate('facebook', '/');
     }
 
     The second parameter is a relative URL to return the user to once signin is complete.
@@ -24,12 +24,20 @@ Authenticating
     passes a 'status' parameter along with it. If status is set to 'ok' authentication was
     successful, if set to 'error' authentication failed. 
 
-    When authentication failed, you can examine the KCB.lastAuthenticationError property 
-    to get the error code. 
+    Other parameters are passed as well, most notably:
+
+        When status 'ok':
+            token           -   Contains the users' access token to use with backend calls
+            expires_at      -   A timestamp (unix format, for javascript use multiply by 1000) when this token expires
+
+        When status 'error':
+            error           -   An error code (see below)
 
 
 Checking if a user is authenticated and getting user object
 -----------------------------------------------------------
 
-    KCB.isAuthenticated()   - returns true when the user is authenticated, false if not
-    KCB.getUser()           - returns the user object 
+    KCB.isAuthenticated()           - returns true when the user is authenticated, false if not
+    KCB.authenticate(type, return)  - Authenticate the user
+    KCB.getUser()                   - returns the user object 
+

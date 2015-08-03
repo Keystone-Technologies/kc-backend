@@ -1,0 +1,37 @@
+window.KCB = function(options) {
+    this.basedomain = options.basedomain;
+    this._data      = { 
+        user: <%== get_user_for_js %>,
+        handlers: {},
+        backend: '<%== get_backend_url %>',
+    }
+
+    var that = this;
+    $(document).ready(function() {
+        that.emit('ready');
+    });
+};
+
+KCB.prototype = {
+    on: function(evt, handler) {
+        if(!this._data.handlers[evt]) this._handlers[evt] = [];
+        this._data.handlers[evt].push(handler);
+    },
+    emit: function(evt, data) {
+        var that = this;
+        if(!data) data = {};
+        
+        if(this._data.handlers[evt]) {
+            this._data.handlers[evt].forEach(function(h) {
+                h.call(that, data);
+            });
+        }
+    },
+    isAuthenticated: function() {
+        if(this._data.user) return true;
+        return false;
+    },
+    authenticate: function(type, returnTo) {
+        document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(returnTo);
+    },
+};

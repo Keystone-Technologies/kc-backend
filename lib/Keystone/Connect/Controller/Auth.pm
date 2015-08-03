@@ -36,35 +36,39 @@ sub generate_nonce {
 
 sub facebook { 
     my $self = shift;
+    my $root = $self->req->param('r');
 
     $self->render_later;
 
-    $self->validate_tenant(sub {
-        my ($c, $err) = (@_);
+    # if no t parameter is supplied, we need to holler
+    if(!defined($self->req->param('t'))) {
+        $self->redirect_to(sprintf('%s?status=error&error=KC_NO_TENANT_SUPPLIED', $root));
+    } else {
+        $self->db->query('SELECT t.* FROM tenant t, tenant_map tm WHERE tm.hostname = ? AND tm.tenant = t.id', $self->req->param('t') => sub {
+            my ($db, $err, $res) = (@_);
 
-        if(defined($err)) {
-            # return to the tenant url
-            $c->stash(is_error => 1, error => $err);
-        } else {
-            $c->session(auth => { return => $self->req->param('auth_return'), tenant => $self->stash('tenant')->{id}  });
-            $c->render_later;
-            $c->generate_nonce(sub {
-                my ($c, $nonce) = (@_);
+            if(defined($err)) {
+                $self->redirect_to(sprintf('%s?status=error&error=KC_INVALID_TENANT', $root));
+            } else {
+                $self->session(auth => { root => $root, tenant => $res->hash->{id} });
+                $self->generate_nonce(sub {
+                    my ($c, $nonce) = (@_);
 
-                my $return_url = sprintf('%s/auth/facebook_return', $c->req->url->base);
+                    my $return_url = sprintf('%s/auth/facebook_return', $c->req->url->base);
 
-                $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
+                    $c->debug('Auth: facebook: return url set to ', $return_url, ' using nonce ', $nonce);
 
-                $c->redirect_to(
-                    sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=token&scope=email',
-                        $c->config('login')->{facebook}->{client_id},
-                        $return_url,
-                        $nonce,
-                    )
-                );
-            });
-        }
-    });
+                    $c->redirect_to(
+                        sprintf('https://www.facebook.com/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s&response_type=token&scope=email',
+                            $c->config('login')->{facebook}->{client_id},
+                            $return_url,
+                            $nonce,
+                        )
+                    );
+                });
+            }
+        });
+    }
 }
 
 sub facebook_return {
@@ -74,16 +78,14 @@ sub facebook_return {
 
     if(defined($self->req->param('error'))) {
         $self->stash(is_error => 1, error => $self->req->param('error'));
-        $self->render(template => 'auth/close');
+        $self->redirect_root(status => 'error', error => 'FB_AUTH_ERROR');
     } elsif(my $nonce = $self->req->param('#state')) {
-        # see if the nonce has been used yet
         $self->db->query('SELECT id FROM auth_nonce WHERE nonce = ?', $nonce => sub {
             my ($db, $err, $results) = (@_);
 
             if(my $nonce = $results->hash) {
                 if($nonce->{used} > 0) {
-                    $self->stash(is_error => 1, error => 'NONCE_ALREADY_USED');
-                    $self->render(template => 'auth/close');
+                    $self->redirect_root(status => 'error', error => 'KC_NONCE_USED_ALREADY');
                 } elsif(my $token = $self->req->param('access_token')) {
                     $self->ua->get('https://graph.facebook.com/debug_token' => form => {
                         input_token     => $token,
@@ -93,26 +95,36 @@ sub facebook_return {
 
                         if(my $res = $tx->success) {
                             if($res->json->{data}->{app_id} eq $self->config('login')->{facebook}->{client_id}) {
-                                # fetch email address using the graph API, then exchange it for an ID from the database
-                                # if we have one, and create something if we don't have it
+                                my $user_id = $res->json->{data}->{user_id};
+
+                                # make a call to the graph API to get the user profile
+                                $self->ua->get(sprintf('https://graph.facebook.com/v2.4/%s', $user_id) => form => {
+                                    access_token => $token,
+                                } => sub {
+                                    my ($ua, $tx) = (@_);
+
+                                    if(my $res = $tx->success) {
+                                        # set up the user record in the database if we have one, if we don't then create it
+                                        # associate a token with the user record as well, 
+
+                                    } else {
+                                        $self->redirect_root(status => 'error', error => 'FB_COULD_NOT_GET_EMAIL');
+                                    }
+                                }
                             } else {
-                                $self->stash(is_error => 1, error => 'FB_INVALID_APP_ID');
-                                $self->render(template => 'auth/close');
+                                $self->redirect_root(status => 'error', 'error' => 'FB_INVALID_APP');
                             }
                         }
                     });
                 } else {
-                    $self->stash(is_error => 1, error => 'FB_NO_TOKEN_RETURNED');
-                    $self->render(template => 'auth/close');
+                    $self->redirect_root(status => 'error', error => 'FB_NO_TOKEN_RETURNED');
                 }
             } else {
-                $self->stash(is_error => 1, error => 'NONCE_INVALID');
-                $self->render(template => 'auth/close');
+                $self->redirect_root(status => 'error', error => 'KC_NONCE_INVALID');
             }
         });
     } else {
-        $self->stash(is_error => 1, error => 'NONCE_EMPTY');
-        $self->render(template => 'auth/close');
+        $self->redirect_root(status => 'error', error => 'KC_NONCE_EMPTY');
     }
 }
 

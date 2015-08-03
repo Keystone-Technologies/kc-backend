@@ -38,3 +38,10 @@ ALTER TABLE auth_nonce ADD used INTEGER NOT NULL DEFAULT 0;
 --3 up
 INSERT INTO tenant (ident, name) VALUES ('benlocal', 'Ben Local Test');
 INSERT INTO tenant_map (tenant, hostname) VALUES (1, 'localhost');
+
+--3 down
+
+--4 up
+ALTER TABLE auth_nonce ADD created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+--4 down
