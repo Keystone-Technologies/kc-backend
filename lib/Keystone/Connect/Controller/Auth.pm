@@ -92,7 +92,7 @@ sub facebook_exchange_code_for_token {
 
     $self->ua->get('https://graph.facebook.com/v2.4/oauth/access_token' => form => {
         client_id       => $self->config('login')->{facebook}->{client_id},
-        redirect_uri    => sprintf('%s/auth/facebook_return/', $c->req->url->base),
+        redirect_uri    => sprintf('%s/auth/facebook_return/', $self->req->url->base),
         client_secret   => $self->config('login')->{facebook}->{client_secret},
         code            => $code
     } => sub {
@@ -165,6 +165,7 @@ sub facebook_get_user_profile {
     my $self = shift;
     my $uid  = shift;
     my $token = shift;
+    my $cb    = shift;
 
     $self->ua->get(sprintf('https://graph.facebook.com/v2.4/%s', $uid) => form => {
         access_token => $token,
