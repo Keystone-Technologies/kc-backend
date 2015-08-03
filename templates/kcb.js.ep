@@ -35,7 +35,8 @@ KCB.prototype = {
         return this._data.backend;
     },
     authenticate: function(type, returnTo) {
-        alert('Going to go to: ' + this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(returnTo));
-        document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(returnTo);
+        var ret = document.location.protocol + '//' + document.location.host + ((document.location.port.length > 0) ? ':' + document.location.port : '') + returnTo;
+        alert('Going to go to: ' + this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(ret));
+        document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(ret);
     },
 };
