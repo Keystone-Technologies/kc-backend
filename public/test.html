@@ -2,8 +2,39 @@
 <html>
     <head>
         <title>Simple authentication test</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
         <script src="//kc-backend.dev.kit.cm/kcb.js"></script>
+        <script type="text/javascript">
+            var Backend = new KCB({ basedomain: 'localhost' });
+        </script>
     </head>
     <body>
+        <div class="container">
+            <div class="unauth alert alert-danger">
+                <p class="lead">You are not authenticated</p>
+                <button class="btn btn-lg" id="signin">SIGN IN (FACEBOOK)</button>
+            </div>
+            <div class="auth alert alert-success">
+                <p class="lead">You are authenticated</p>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                if(Backend.isAuthenticated()) {
+                    $('.unauth').hide();
+                    $('.auth').show();
+                } else {
+                    $('.unauth').show();
+                    $('.auth').hide();
+                }
+
+                $('button#signin').click(function() {
+                    Backend.authenticate('facebook', '/');
+                });
+            });
+        </script>
     </body>
 </html>

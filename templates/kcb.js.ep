@@ -32,7 +32,7 @@ KCB.prototype = {
         return false;
     },
     getBackendURL: function() {
-        retrn this._data.backend;
+        return this._data.backend;
     },
     authenticate: function(type, returnTo) {
         document.location.href = this.getBackendURL() + '/auth/' + type + '?r=' + encodeURIComponent(returnTo);
