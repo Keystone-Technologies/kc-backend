@@ -71,6 +71,17 @@ sub facebook {
     }
 }
 
+sub redirect_root {
+    my $self = shift;
+    my %args = (@_);
+    
+    if($args{status} eq 'error') {
+        $self->redirect_to(sprintf('%s?status=error&error=%s', $self->session('auth')->{root}, $args{error}));
+    } else {
+        $self->redirect_to(sprintf('%s?status=ok&token=%s', $self->session('auth')->{root}, $args{token}));
+    }
+}
+
 sub facebook_return {
     my $self = shift;
 
