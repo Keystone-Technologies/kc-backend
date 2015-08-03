@@ -45,3 +45,9 @@ INSERT INTO tenant_map (tenant, hostname) VALUES (1, 'localhost');
 ALTER TABLE auth_nonce ADD created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 --4 down
+
+--5 up
+ALTER TABLE account ADD expires_at INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE account ADD access_token VARCHAR(255) NOT NULL DEFAULT '*';
+
+--5 down
