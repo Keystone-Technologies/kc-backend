@@ -124,7 +124,7 @@ Returns the users' JSON object
 
 C<POST http(s)://backend-app/v1.0/me/grid>
 
-Parameters:             user_object - The users' JSON object
+Parameters:             The entire user's object as an application/json post
 Request Content-Type:   application/json
 
 Returns the users' JSON object when stored successfully.
