@@ -67,3 +67,13 @@ INSERT INTO tenant_map (tenant, hostname) VALUES (2, 'kc-backend.dev.kit.cm');
 
 --6 down
 DROP TABLE backend_token CASCADE;
+
+--7 up
+CREATE TABLE role_definition (
+    id              SERIAL NOT NULL PRIMARY KEY,
+    ident           VARCHAR(32) NOT NULL,
+    label           VARCHAR(255) NOT NULL
+);
+INSERT INTO role_definition (id, ident, label) VALUES (0, 'user', 'Regular user rights');
+INSERT INTO role_definition (ident, label) VALUES ('admin.global', 'Global administrator rights');
+INSERT INTO role_definition (ident, label) VALUES ('admin.tenant', 'Tenant administrator rights');
