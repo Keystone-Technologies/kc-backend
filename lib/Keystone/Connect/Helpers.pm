@@ -14,6 +14,7 @@ sub install {
     });
     $app->helper(get_backend_url => sub { return shift->req->url->base });
     $app->helper(user => sub { return shift->stash('current_user') });
+    $app->helper(tenant => sub { return shift->stash('current_tenant') });
     $app->helper(is_user_authenticated => sub { return (defined(shift->user)) ? 1 : 0 });
 }
 

@@ -77,3 +77,7 @@ CREATE TABLE role_definition (
 INSERT INTO role_definition (id, ident, label) VALUES (0, 'user', 'Regular user rights');
 INSERT INTO role_definition (ident, label) VALUES ('admin.global', 'Global administrator rights');
 INSERT INTO role_definition (ident, label) VALUES ('admin.tenant', 'Tenant administrator rights');
+ALTER TABLE account DROP COLUMN tenant;
+
+INSERT INTO tenant (id, ident, name) VALUES (0, '#system', '#system');
+ALTER TABLE backend_token ADD COLUMN tenant INTEGER NOT NULL DEFAULT 0 REFERENCES tenant (id) DEFERRABLE INITIALLY DEFERRED;

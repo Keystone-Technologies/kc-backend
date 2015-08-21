@@ -8,14 +8,21 @@ use Mojo::Util qw/url_escape b64_encode dumper/;
 sub signout {
     my $self = shift;
     my $r    = $self->req->param('r');
+    my $a    = $self->req->param('a');
 
     $self->render_later;
 
     if(defined($self->session('kc_token'))) {
-        $self->db->query('DELETE FROM backend_token WHERE token = ?', $self->session('kc_token') => sub {
-            $self->session(kc_token => undef);
-            $self->redirect_to($r);
-        });
+        if(defined($a) && $a > 0) {
+            # delete all backend tokens for the given account and tenant
+
+        } else {
+            # delete the current token, e.g. the current device only
+            $self->db->query('DELETE FROM backend_token WHERE token = ?', $self->session('kc_token') => sub {
+                $self->session(kc_token => undef);
+                $self->redirect_to($r);
+            });
+        }
     } else {
         $self->session(kc_token => undef);
         $self->redirect_to($r);
@@ -29,7 +36,7 @@ sub validate_kc_token {
 
     if(defined($self->session('kc_token'))) {
         $self->debug('validate_kc_token(): have token in session: ', $self->session('kc_token'));
-        $self->db->query('SELECT a.name,a.email FROM account a, tenant t, backend_token bt WHERE t.id = a.tenant AND a.id = bt.account AND bt.token = ?', $self->session('kc_token') => sub {
+        $self->db->query('SELECT a.name,a.email,t.id AS tenant_id,t.ident AS tenant_ident, t.name AS tenant_name FROM account a, tenant t, backend_token bt WHERE t.id = bt.tenant AND a.id = bt.account AND bt.token = ?', $self->session('kc_token') => sub {
             my ($db, $err, $res) = (@_);
 
             if(defined($err) || $res->rows == 0) {
@@ -39,7 +46,12 @@ sub validate_kc_token {
             } elsif(my $account = $res->hash) {
                 $self->debug('validate_kc_token(): account hash: ', dumper($account));
                 # FIXME: check token expiry here, for now just set things and continue
-                $self->stash('current_user' => $account);
+                my $tenant = {
+                    id      => delete($account->{tenant_id}),
+                    ident   => delete($account->{tenant_ident}),
+                    name    => delete($account->{tenant_name})
+                };
+                $self->stash('current_user' => $account, 'current_tenant' => $tenant);
                 $self->continue;
             } else {
                 $self->debug('validate_kc_token(): account hash not present');
@@ -132,7 +144,7 @@ sub create_new_account {
 
     $self->debug('create_new_account(): entered');
 
-    $self->db->query('INSERT INTO account (name, email, tenant) VALUES (?, ?, ?) RETURNING id', @{$profile}{qw/name email tenant/} => sub {
+    $self->db->query('INSERT INTO account (name, email) VALUES (?, ?) RETURNING id', @{$profile}{qw/name email/} => sub {
         my ($db, $err, $res) = (@_);
 
         if(defined($err)) {
@@ -158,7 +170,7 @@ sub generate_backend_token {
     
         $self->debug('generate_backend_token(): generated token: ', $nonce);
 
-        $self->db->query('INSERT INTO backend_token (token, account) VALUES (?, ?) RETURNING token', $nonce, $account_id => sub {
+        $self->db->query('INSERT INTO backend_token (token, account, tenant) VALUES (?, ?, ?) RETURNING token', $nonce, $account_id, $self->session('auth')->{tenant} => sub {
             my ($db, $err, $res) = (@_);
 
             if(defined($err)) {
@@ -179,14 +191,13 @@ sub sign_in_user {
 
     $self->debug('sign_in_user(): entered with profile ', dumper($profile));
 
-    $self->db->query('SELECT id FROM account WHERE email = ? AND tenant = ?', $profile->{email}, $self->session('auth')->{tenant} => sub {
+    $self->db->query('SELECT id FROM account WHERE email = ?', $profile->{email} => sub {
         my ($db, $err, $res) = (@_);
 
         if(defined($err)) {
             return $cb->($self, 'KC_DATABASE_ERROR', undef);
         } else {
             # fix the profile
-            $profile->{tenant} = $self->session('auth')->{tenant};
             if($res->rows == 0) {
                 # new account, so create that first
                 $self->create_new_account($profile => sub {
