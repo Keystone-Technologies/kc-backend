@@ -9,5 +9,4 @@ sub kcb_js {
     $self->render(template => 'kcb', format => 'js');
 }
 
-
 1;

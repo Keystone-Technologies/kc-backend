@@ -7,14 +7,14 @@ sub me_set_grid {
 
     $self->render_later;
    
-    $self->db->query('SELECT json_data FROM account_json WHERE account = ?', $self->current_user->{id} => sub {
+    $self->db->query('SELECT json_data FROM account_json WHERE account = ? AND tenant = ?', $self->current_user->{id}, $self->current_tenant->{id} => sub {
         my ($db, $err, $res) = (@_);
 
         if(defined($err)) {
             $self->render(json => { status => 'error', error => 'KC_DATABASE_ERROR' });
         } else {
             if($res->rows == 0) {
-                $self->db->query('INSERT INTO account_json (account, json_data) VALUES (?, ?)', $self->current_user->{id}, encode_json($self->req->json) => sub {
+                $self->db->query('INSERT INTO account_json (account, tenant, json_data) VALUES (?, ?, ?)', $self->current_user->{id}, $self->current_tenant->{id}, encode_json($self->req->json) => sub {
                     my ($db, $err, $res) = (@_);
 
                     if(defined($err)) {
@@ -24,7 +24,7 @@ sub me_set_grid {
                     }
                 });
             } else {
-                $self->db->query('UPDATE account_json SET json_data = ? WHERE account = ?', encode_json($self->req->json), $self->current_user->{id} => sub {
+                $self->db->query('UPDATE account_json SET json_data = ? WHERE account = ? AND tenant = ?', encode_json($self->req->json), $self->current_user->{id}, $self->current_tenant->{id} => sub {
                     my ($db, $err, $res) = (@_);
 
                     if(defined($err)) {
@@ -42,7 +42,7 @@ sub me_get_grid {
     my $self = shift;
     
     $self->render_later;
-    $self->db->query('SELECT json_data FROM account_json WHERE account = ?', $self->current_user->{id} => sub {
+    $self->db->query('SELECT json_data FROM account_json WHERE account = ? AND tenant = ?', $self->current_user->{id}, $self->current_tenant->{id} => sub {
         my ($db, $err, $res) = (@_);
 
         if(defined($err)) {
